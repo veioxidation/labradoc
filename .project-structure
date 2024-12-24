@@ -1,0 +1,20 @@
+my_extraction_app/
+├── app/
+│   ├── main.py
+│   ├── config.py
+│   ├── database.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── routers/
+│   │   ├── taxonomy.py
+│   │   ├── documents.py
+│   │   ├── extraction.py
+│   │   ├── validation.py
+│   │   └── metrics.py
+│   ├── services/
+│   │   ├── nucleus_client.py
+│   │   ├── labeling_service.py
+│   │   ├── validation_service.py
+│   │   └── metrics_service.py
+│   └── ...
+└── requirements.txt

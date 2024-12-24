@@ -1,0 +1,7 @@
+fastapi==0.95.2
+uvicorn==0.22.0
+sqlalchemy==2.0.9
+psycopg2-binary==2.9.6   # For PostgreSQL, remove if you're using CosmosDB
+pydantic==1.10.7
+requests==2.31.0         # For calling Nucleus API (if needed)
+# Add any other libs you need for AI-based validation, etc.
