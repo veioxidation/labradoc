@@ -42,3 +42,19 @@ class PassingExtractor(DocumentExtractor):
         }
         
         return predictions
+
+
+class HardcodeValuesExtractor(DocumentExtractor):
+    """
+    A simple extractor that assigns values in **kwargs to fields in a document.
+    """
+    def extract(self, document: Document, extraction_model: ExtractionModel, *args: Any, **kwargs: Any) -> Dict[str, str]:
+        # Get all fields from the document's taxonomy
+        fields = document.taxonomy.fields if document.taxonomy else []
+
+        # Create dictionary with values from kwargs for each field
+        predictions = {
+            field.name: kwargs.get(field.name, "N/A")
+            for field in fields
+        }
+        return predictions
