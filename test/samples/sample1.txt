@@ -1,0 +1,14 @@
+This is a sample text document used for testing document processing.
+
+It contains multiple lines of text to demonstrate basic document structure.
+
+Some key information:
+- Document Type: Report
+- Issue Date: 2024-01-15 
+- Reference Number: REF-2024-001
+
+The document processing system should be able to extract and classify this information
+according to the taxonomy defined in the system.
+
+Additional paragraphs can be included to test content extraction capabilities.
+This helps validate that the document processing pipeline works as expected.

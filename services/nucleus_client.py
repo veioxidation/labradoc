@@ -1,5 +1,5 @@
 import requests
-from app.config import settings
+from config import settings
 
 def upload_document_to_nucleus(file_path: str):
     """Example function to upload a document file to Nucleus."""

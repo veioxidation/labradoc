@@ -1,0 +1,27 @@
+Core Functional Areas:
+1. Document Management
+    - Upload documents
+    - Retrieve documents
+    - Preprocess documents
+2. Labeling
+    - Add labels
+    - Edit labels
+    - Export labeled data
+    - Validate labels
+    - Import labels from external file
+3. Extraction
+    - Run extraction pipeline
+    - Handle document formats
+    - Output structured data
+4. Evaluation
+    - Calculate metrics
+    - Compare model versions
+    - Generate reports
+5. Model Improvement
+    - Retrain model
+    - Fine-tune model
+    - Deploy updated model
+6. User Management
+    - Authentication
+    - Role-based access
+    - Audit logs
