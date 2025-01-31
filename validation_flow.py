@@ -8,6 +8,8 @@ from services.extractions import get_predictions_for_document_and_model
 
 from pydantic import BaseModel
 
+from services.metrics import create_or_update_metric
+
 
 class FieldComparisonResult(BaseModel):
     field_name: str
@@ -121,7 +123,7 @@ if __name__ == "__main__":
     # You would need to provide actual document ID and extraction model ID
     db = get_db().__next__()
 
-    model_id = 6
+    model_id = 8
     document_ids = [1, 2]
     doc_results = []
     for document_id in document_ids:
@@ -137,6 +139,15 @@ if __name__ == "__main__":
     field_accuracy = get_accuracy_for_each_field(doc_results)
     overall_accuracy = sum([result.accuracy_rate() for result in doc_results]) / len(doc_results) * 100
     perc_of_full_correct = get_percent_of_fully_correctly_extracted(doc_results)
+
+    # Add to Metrics database - overall_accuracy, field_accuracy, perc_of_full_correct
+    metrics = [
+        {"name": "overall_accuracy", "value": overall_accuracy},
+        {"name": "perc_of_full_correct", "value": perc_of_full_correct}
+    ] + [{"name": f"{field}_accuracy", "value": value} for field, value in field_accuracy.items()]
+
+    for metric in metrics:
+        create_or_update_metric(db, metric["name"], metric["value"], len(doc_results), model_id)
 
     print(doc_results)
     print(f"Overall accuracy: {overall_accuracy}")

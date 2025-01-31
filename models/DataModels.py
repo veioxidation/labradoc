@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, DateTime, Enum
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, DateTime, Enum, Float, UniqueConstraint, CheckConstraint
 from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime, UTC
 from enum import Enum as PyEnum  # Rename to avoid confusion
@@ -214,6 +214,11 @@ class FieldLabel(Base):
     field_name = Column(String, nullable=False)
     occurrence = Column(Integer, nullable=False, default=1)
 
+    __table_args__ = (
+        UniqueConstraint('document_id', 'field_id', name='uq_document_field'),
+    )
+
+
     def __repr__(self):
         return f"<FieldLabel(field_id={self.field_id}, document_id={self.document_id}, value='{self.value[:50]}...'>"
 
@@ -249,6 +254,8 @@ class ExtractionModel(Base):
 
     predictions = relationship("Prediction", back_populates="model")
 
+    metrics = relationship("Metric", back_populates="model")
+
     def __repr__(self):
         return f"<ExtractionModel(name='{self.name}')>"
 
@@ -281,8 +288,48 @@ class Prediction(Base):
     field_name = Column(String, nullable=False)
     value = Column(Text, nullable=False)
 
+    __table_args__ = (
+        UniqueConstraint('document_id', 'model_id', 'field_id', name='uq_document_model_field'),
+    )
+
+
     occurrence = Column(Integer, nullable=False, default=1)
     document = relationship("Document", back_populates="predictions")
 
     def __repr__(self):
         return f"<Prediction(document_id={self.document_id}, model_id={self.model_id})>"
+
+class Metric(Base):
+    """
+    Metric model
+    Represents a metric entity in the system.
+
+    Attributes:
+        id (int): Unique identifier for the metric
+        name (str): Metric name
+        value (float): Metric value
+        sample_size (int): Sample size used to calculate the metric
+        created_at (datetime): Timestamp when metric was created
+        updated_at (datetime): Timestamp when metric was last updated
+        model_id (int): Foreign key to the extraction model that this metric belongs to
+        model (ExtractionModel): Relationship to the extraction model that this metric belongs"""
+    __tablename__ = 'metrics'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    value = Column(Float, nullable=False)
+    sample_size = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    model_id = Column(Integer, ForeignKey('extraction_models.id'), nullable=False)
+    model = relationship("ExtractionModel", back_populates="metrics")
+
+    __table_args__ = (
+        UniqueConstraint('model_id', 'name', name='uq_model_id_name'),
+        CheckConstraint('sample_size > 0', name='check_sample_size_positive'),
+    )
+
+
+    def __repr__(self):
+        return f"<Metric(name='{self.name}')>"
