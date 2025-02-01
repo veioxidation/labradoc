@@ -1,15 +1,15 @@
 import os
 from typing import Dict, List
-from sqlalchemy.orm import Session
+
 import pandas as pd
-from typing import Dict, List, Optional
+from sqlalchemy.orm import Session
+
 # Import our services
 from database import get_db
 from models.DataModels import Taxonomy
+from services.documents import upload_document, assign_labels
 from services.organization_service import create_organization, get_organization_by_name
 from services.taxonomy_service import create_taxonomy
-from services.documents import upload_document, assign_labels
-
 
 
 def create_demo_taxonomy(db: Session, organization_id: int):
@@ -35,7 +35,8 @@ def create_demo_taxonomy(db: Session, organization_id: int):
         }
     ]
     # Check if the taxonomy already exists for the organization
-    existing_taxonomy = db.query(Taxonomy).filter_by(name="Document Classification", organization_id=organization_id).first()
+    existing_taxonomy = db.query(Taxonomy).filter_by(name="Document Classification",
+                                                     organization_id=organization_id).first()
     if not existing_taxonomy:
         # If it doesn't exist, create the taxonomy
         return create_taxonomy(
@@ -49,14 +50,14 @@ def create_demo_taxonomy(db: Session, organization_id: int):
         print("Taxonomy 'Document Classification' already exists for this organization.")
         return existing_taxonomy
 
-def process_documents(db: Session, folder_path: str, organization_id: int):
+
+def upload_documents(db: Session, folder_path: str, organization_id: int):
     """Process all documents in a folder"""
-    results = []
-    
+
     for file_name in os.listdir(folder_path):
         if file_name.endswith(('.pdf', '.jpg', '.png', '.txt')):
             file_path = os.path.join(folder_path, file_name)
-            
+
             # Upload document to our system
             upload_document(
                 db=db,
@@ -65,27 +66,16 @@ def process_documents(db: Session, folder_path: str, organization_id: int):
                 individual_id="default",  # You might want to specify this based on your needs
                 name=file_name
             )
-            
-            # Upload to Nucleus for processing
-            # nucleus_doc_id = upload_document_to_nucleus(document.file_path)
-            
-            # Store the results for later processing
-            # results.append({
-            #     "document_id": document.id,
-            #     "nucleus_doc_id": nucleus_doc_id,
-            #     "file_name": file_name
-            # })
-    
-    return results
+
 
 def apply_labels_from_excel(db: Session, excel_path: str, document_mapping: List[Dict], taxonomy_id: int):
     """Apply labels from Excel file to documents"""
     # Read Excel file containing labels
     df = pd.read_excel(excel_path)
-    
+
     # Create a mapping of filenames to document IDs
     filename_to_doc_id = {doc["file_name"]: doc["document_id"] for doc in document_mapping}
-    
+
     for _, row in df.iterrows():
         document_id = filename_to_doc_id.get(row['file_name'])
         if document_id:
@@ -95,7 +85,7 @@ def apply_labels_from_excel(db: Session, excel_path: str, document_mapping: List
                 "issue_date": row['issue_date'].strftime('%Y-%m-%d'),
                 "reference_number": row['reference_number']
             }
-            
+
             # Assign labels to document
             assign_labels(
                 db=db,
@@ -103,6 +93,7 @@ def apply_labels_from_excel(db: Session, excel_path: str, document_mapping: List
                 taxonomy_id=taxonomy_id,
                 labels=labels
             )
+
 
 def main():
     db = get_db().__next__()
@@ -118,20 +109,14 @@ def main():
         )
     else:
         org = existing_org
-    # Create a new organization    
+
     # Create taxonomy for document classification
     taxonomy = create_demo_taxonomy(db, org.id)
-    
-    # Process documents from test folder
+
+    # Upload documents from test folder
     test_folder = "test/samples"
-    document_results = process_documents(db, test_folder, org.id)
-    
-    # Apply labels from Excel file
-    # labels_file = "document_labels.xlsx"
-    # apply_labels_from_excel(db, labels_file, document_results, taxonomy.id)
-    
-    # print(f"Processed {len(document_results)} documents")
-    # return org.id, taxonomy.id, document_results
+    upload_documents(db, test_folder, org.id)
+
 
 if __name__ == "__main__":
     # You would need to set up your database session here
