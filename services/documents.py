@@ -44,6 +44,24 @@ def upload_document(
     db.refresh(document)
     return document
 
+
+def upload_documents_from_folder(db: Session, folder_path: str, organization_id: int):
+    """Process all documents in a folder"""
+
+    for file_name in os.listdir(folder_path):
+        if file_name.endswith(('.pdf', '.jpg', '.png', '.txt')):
+            file_path = os.path.join(folder_path, file_name)
+
+            # Upload document to our system
+            upload_document(
+                db=db,
+                organization_id=organization_id,
+                file_path=file_path,
+                individual_id="default",  # You might want to specify this based on your needs
+                name=file_name
+            )
+
+
 def get_document(db: Session, document_id: int) -> Optional[Document]:
     """
     Get a document by ID.

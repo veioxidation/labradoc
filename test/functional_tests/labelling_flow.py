@@ -1,9 +1,12 @@
+from typing import Dict, List
 from database import get_db
 from services.documents import assign_labels
 from services.organization_service import get_organization_by_name
 from services.taxonomy_service import get_taxonomy_by_name
 
-def assign_labels_to_documents(organization_name: str, taxonomy_name: str):
+def assign_labels_to_documents(organization_name: str,
+                               taxonomy_name: str,
+                               labels_to_assign: List[Dict]):
     db = get_db().__next__()
 
     # Retrieve organization by name
@@ -17,21 +20,6 @@ def assign_labels_to_documents(organization_name: str, taxonomy_name: str):
     if not taxonomy:
         print(f"Taxonomy '{taxonomy_name}' not found.")
         return
-    
-    labels_to_assign = [
-        {"document_id": 1, "labels": {"document_type": "Invoice",
-                                      "issue_date": "2021-01-15",
-                                      "reference_number": "INV-001"}},
-        {"document_id": 2, "labels": {"document_type":"Receipt",
-                                      "issue_date": "2021-02-20",
-                                      "reference_number": "REC-002"}},
-    ]
-
-    # Example document mapping (this would typically come from your document processing logic)
-    document_mapping = [
-        {"file_name": "sample1.txt", "document_id": 1},
-        {"file_name": "sample2.txt", "document_id": 2},
-    ]
 
     # Assign labels to documents
     for label_info in labels_to_assign:
@@ -45,6 +33,10 @@ def assign_labels_to_documents(organization_name: str, taxonomy_name: str):
     print(f"Labels assigned to documents for organization '{organization_name}' and taxonomy '{taxonomy_name}'.")
 
 if __name__ == "__main__":
+    from org_definition import org_name, taxonomy_name
+    from labels_definition import labels_to_assign
     # Example usage
-    assign_labels_to_documents("Demo Organization", "Document Classification")
+    assign_labels_to_documents(organization_name=org_name,
+                               taxonomy_name=taxonomy_name,
+                               labels_to_assign=labels_to_assign)
 

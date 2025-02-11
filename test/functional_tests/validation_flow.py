@@ -9,6 +9,8 @@ from services.extractions import get_predictions_for_document_and_model
 from pydantic import BaseModel
 
 from services.metrics import create_or_update_metric
+from services.model import get_extraction_model_by_name
+from test.functional_tests.org_definition import model_name
 
 
 class FieldComparisonResult(BaseModel):
@@ -122,8 +124,10 @@ def get_percent_of_fully_correctly_extracted(comparison_results: List[DocumentCo
 if __name__ == "__main__":
     # You would need to provide actual document ID and extraction model ID
     db = get_db().__next__()
+    model = get_extraction_model_by_name(db, model_name)
+    model_id = model.id
 
-    model_id = 8
+
     document_ids = [1, 2]
     doc_results = []
     for document_id in document_ids:
