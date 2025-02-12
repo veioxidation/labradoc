@@ -1,9 +1,10 @@
 
-from sqlalchemy.orm import Session
-from models.DataModels import FieldLabel, Taxonomy, TaxonomyField
 from typing import List, Optional, Dict
 
-from services.documents import get_document
+from sqlalchemy.orm import Session
+
+from models.DataModels import Taxonomy, TaxonomyField
+
 
 def create_taxonomy(
     db: Session,
@@ -181,64 +182,3 @@ def delete_taxonomy(db: Session, taxonomy_id: int) -> bool:
         db.commit()
         return True
     return False
-
-def assign_labels(
-    db: Session,
-    document_id: int,
-    taxonomy_id: int,
-    labels: Dict[str, str]
-) -> bool:
-    """
-    Assign labels to a document according to a taxonomy.
-    
-    Args:
-        db (Session): Database session
-        document_id (int): ID of the document to label
-        taxonomy_id (int): ID of the taxonomy to use
-        labels (Dict[str, str]): Dictionary mapping field names to label values
-        
-    Returns:
-        bool: True if labels were successfully assigned, False otherwise
-        
-    Raises:
-        ValueError: If required fields are missing from labels
-    """
-    document = get_document(db, document_id)
-    if not document:
-        return False
-        
-    # Get all required fields for the taxonomy
-    required_fields = db.query(TaxonomyField).filter(
-        TaxonomyField.taxonomy_id == taxonomy_id,
-        TaxonomyField.is_required == True
-    ).all()
-    
-    # Verify all required fields are present
-    required_field_names = {field.name for field in required_fields}
-    provided_field_names = set(labels.keys())
-    missing_fields = required_field_names - provided_field_names
-    
-    if missing_fields:
-        raise ValueError(f"Missing required fields: {missing_fields}")
-    
-    # Remove existing labels
-    db.query(FieldLabel).filter(FieldLabel.document_id == document_id).delete()
-    # Create new labels
-    for field_name, value in labels.items():
-        field = db.query(TaxonomyField).filter(
-            TaxonomyField.taxonomy_id == taxonomy_id,
-            TaxonomyField.name == field_name
-        ).first()
-        
-        if field:
-            label = FieldLabel(
-                document_id=document_id,
-                field_id=field.id,
-                value=value
-            )
-            db.add(label)
-    
-    document.taxonomy_id = taxonomy_id
-    document.is_labeled = True
-    db.commit()
-    return True

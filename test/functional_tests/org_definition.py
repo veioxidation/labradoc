@@ -6,7 +6,6 @@ org_description = "This is a demo organization for testing purposes."
 test_folder = "test/samples"
 
 
-
 fields = [
     {
         "name": "document_type",

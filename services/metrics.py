@@ -40,7 +40,7 @@ def update_metric(db: Session, metric_id: int, name: str = None, value: float = 
     """
     metric = db.query(Metric).filter(Metric.id == metric_id).first()
     if not metric:
-        raise ValueError(f"Metric with ID '{metric_id}' not found.")
+        raise ValueError(f"PerformanceMetric with ID '{metric_id}' not found.")
 
     if name is not None:
         metric.name = name
@@ -53,7 +53,11 @@ def update_metric(db: Session, metric_id: int, name: str = None, value: float = 
     db.refresh(metric)
     return metric
 
-def create_or_update_metric(db: Session, name: str, value: float, sample_size: int, model_id: int) -> Metric:
+def create_or_update_metric(db: Session,
+                            name: str,
+                            value: float,
+                            sample_size: int,
+                            model_id: int) -> Metric:
     """
     Create a new metric or update an existing one in the database.
 
@@ -73,7 +77,8 @@ def create_or_update_metric(db: Session, name: str, value: float, sample_size: i
     else:
         return create_metric(db, name, value, sample_size, model_id)
 
-def delete_metric(db: Session, metric_id: int) -> bool:
+def delete_metric(db: Session,
+                  metric_id: int) -> bool:
     """
     Delete a metric from the database.
 
@@ -86,7 +91,7 @@ def delete_metric(db: Session, metric_id: int) -> bool:
     """
     metric = db.query(Metric).filter(Metric.id == metric_id).first()
     if not metric:
-        raise ValueError(f"Metric with ID '{metric_id}' not found.")
+        raise ValueError(f"PerformanceMetric with ID '{metric_id}' not found.")
 
     db.delete(metric)
     db.commit()
@@ -120,3 +125,5 @@ def get_metric_by_model_and_name(db: Session, metric_name: str, model_id: int) -
     """
     return db.query(Metric).filter(Metric.name == metric_name,
                                    Metric.model_id == model_id).first()
+
+

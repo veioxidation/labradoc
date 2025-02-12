@@ -1,7 +1,11 @@
-from datetime import UTC, datetime
+from typing import Dict, List
+
 from sqlalchemy.orm import Session
+
+from functions.extractors import DocumentExtractor
+from functions.post_processing import PostProcessor
 from models.DataModels import Prediction, TaxonomyField, ExtractionModel, Document
-from typing import Dict, List, Optional
+
 
 def add_predictions(db: Session, model: ExtractionModel, document: Document, predictions: Dict[str, str]) -> bool:
     """
@@ -105,3 +109,22 @@ def delete_predictions_for_document_and_model(db: Session, document_id: int, mod
         return True
     return False
 
+
+def extract_and_assign_predictions(db: Session,
+                                   extraction_model: ExtractionModel,
+                                   post_processor: PostProcessor,
+                                   document: Document,
+                                   extractor: DocumentExtractor,
+                                   **kwargs):
+
+    # Get predictions
+    predictions = extractor.extract(document, extraction_model, **kwargs)
+
+    # Apply post-processing
+    predictions = post_processor.process(predictions=predictions)
+
+    print("Predictions:", predictions)
+    if predictions:
+        success = add_predictions(db=db, model=extraction_model, document=document, predictions=predictions)
+        if success:
+            print(f"Predictions assigned to document '{document.name}' using model '{extraction_model.name}'.")

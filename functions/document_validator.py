@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
+
+import functions.metrics
 from models.DataModels import Document, ExtractionModel
 
 class DocumentValidator(ABC):
@@ -35,7 +37,7 @@ class RequiredFieldsValidator(DocumentValidator):
         required_fields = [field for field in document.taxonomy.fields if field.is_required]
         
         # Get all predictions for this document and model
-        predictions = [p for p in document.predictions if p.model_id == extraction_model.id]
+        predictions = [p for p in document.predictions if functions.metrics.model_id == extraction_model.id]
         
         # Check that each required field has at least one prediction
         predicted_field_ids = {p.field_id for p in predictions}
@@ -58,7 +60,7 @@ class FieldTypeValidator(DocumentValidator):
         )
 
         # Get all predictions for this document and model
-        predictions = [p for p in document.predictions if p.model_id == extraction_model.id]
+        predictions = [p for p in document.predictions if functions.metrics.model_id == extraction_model.id]
         
         # Validate each prediction according to its field's data type
         for prediction in predictions:
@@ -90,7 +92,7 @@ class MissingFieldsValidator(DocumentValidator):
     """
     def validate(self, document: Document, extraction_model: ExtractionModel, *args: Any, **kwargs: Any) -> bool:
         # Get all predictions for this document and model
-        predictions = [p for p in document.predictions if p.model_id == extraction_model.id]
+        predictions = [p for p in document.predictions if functions.metrics.model_id == extraction_model.id]
         
         # Get all fields from the taxonomy
         taxonomy_fields = document.taxonomy.fields if document.taxonomy else []

@@ -1,6 +1,6 @@
+import pandas as pd
 from sqlalchemy.orm import Session
 from models.DataModels import Prediction, TaxonomyField, Document, FieldLabel
-from datetime import datetime, UTC
 from typing import List, Optional, Dict
 import os
 import shutil
@@ -151,6 +151,35 @@ def delete_document(db: Session, document_id: int) -> bool:
         return True
     return False
 
+# def assign_labels_to_documents(db: Session,
+#                                organization_name: str,
+#                                taxonomy_name: str,
+#                                labels_to_assign: List[Dict]):
+#
+#     # Retrieve organization by name
+#     organization = get_organization_by_name(db, organization_name)
+#     if not organization:
+#         print(f"Organization '{organization_name}' not found.")
+#         return
+#
+#     # Retrieve taxonomy by name
+#     taxonomy = get_taxonomy_by_name(db, taxonomy_name)
+#     if not taxonomy:
+#         print(f"Taxonomy '{taxonomy_name}' not found.")
+#         return
+#
+#     # Assign labels to documents
+#     for label_info in labels_to_assign:
+#         assign_labels(
+#             db=db,
+#             document_id=label_info["document_id"],
+#             taxonomy_id=taxonomy.id,
+#             labels=label_info["labels"]
+#         )
+#
+#     print(f"Labels assigned to documents for organization '{organization_name}' and taxonomy '{taxonomy_name}'.")
+
+
 def assign_labels(
     db: Session,
     document_id: int,
@@ -284,5 +313,28 @@ def assign_extraction_values(
     return True
 
 
+def apply_labels_from_excel(db: Session, excel_path: str, document_mapping: List[Dict], taxonomy_id: int):
+    """Apply labels from Excel file to documents"""
+    # Read Excel file containing labels
+    df = pd.read_excel(excel_path)
 
+    # Create a mapping of filenames to document IDs
+    filename_to_doc_id = {doc["file_name"]: doc["document_id"] for doc in document_mapping}
 
+    for _, row in df.iterrows():
+        document_id = filename_to_doc_id.get(row['file_name'])
+        if document_id:
+            # Create labels dictionary from Excel columns
+            labels = {
+                "document_type": row['document_type'],
+                "issue_date": row['issue_date'].strftime('%Y-%m-%d'),
+                "reference_number": row['reference_number']
+            }
+
+            # Assign labels to document
+            assign_labels(
+                db=db,
+                document_id=document_id,
+                taxonomy_id=taxonomy_id,
+                labels=labels
+            )

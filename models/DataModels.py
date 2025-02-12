@@ -301,13 +301,13 @@ class Prediction(Base):
 
 class Metric(Base):
     """
-    Metric model
+    PerformanceMetric model
     Represents a metric entity in the system.
 
     Attributes:
         id (int): Unique identifier for the metric
-        name (str): Metric name
-        value (float): Metric value
+        name (str): PerformanceMetric name
+        value (float): PerformanceMetric value
         sample_size (int): Sample size used to calculate the metric
         created_at (datetime): Timestamp when metric was created
         updated_at (datetime): Timestamp when metric was last updated
