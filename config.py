@@ -14,3 +14,4 @@ class Settings(BaseSettings):
         env_file = ".env"  # optionally load environment variables from a file
 
 settings = Settings()
+print(os.getenv('DATABASE_URL'))

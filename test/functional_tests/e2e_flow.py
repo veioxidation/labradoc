@@ -1,24 +1,22 @@
-import os
-from typing import Dict, List
+from dotenv import load_dotenv
 
-import pandas as pd
-from sqlalchemy.orm import Session
+from services.extractions import add_predictions
+
+load_dotenv()
 
 # Import our services
-from database import get_db
-from functions.extractors import HardcodeValuesExtractor
-from models.DataModels import Taxonomy, Document
-from services.documents import upload_document, assign_labels, upload_documents_from_folder, get_document
+from functions.extractors import HardcodeValuesExtractor, DocumentExtractor
+from models.DataModels import Document, ExtractionModel
+from services.documents import upload_documents_from_folder, get_document, get_documents
 from services.metrics import create_or_update_metric
 from services.model import create_extraction_model, get_extraction_model_by_name
 from services.organization_service import create_organization, get_organization_by_name
-from services.taxonomy_service import create_taxonomy
+from services.taxonomy_service import get_taxonomy_by_name
 
-from org_definition import fields, taxonomy_name, org_name, org_description, test_folder
+from org_definition import taxonomy_name, org_name, org_description, test_folder, model_description
 
 from database import get_db
 from test.functional_tests.document_definition import document_mapping
-from test.functional_tests.extraction_flow import extract_and_assign_predictions
 from test.functional_tests.labelling_flow import assign_labels_to_documents
 from test.functional_tests.organization_definition_flow import create_demo_taxonomy
 from test.functional_tests.validation_flow import compare_labels_and_predictions, \
@@ -51,6 +49,8 @@ if ORG_CREATION:
 
     # Create taxonomy for document classification
     create_demo_taxonomy(db, org.id)
+else:
+    org = get_organization_by_name(db, org_name)
 
 if ADD_DOCS_TO_ORG:
     # Uploading documents
@@ -59,28 +59,44 @@ if ADD_DOCS_TO_ORG:
     # Upload documents from test folder
     upload_documents_from_folder(db, test_folder, org.id)
 
-
 if LABELLING:
-    from labels_definition import labels_to_assign
+    from labels_definition import labels_to_assign, extractions_to_assign
+
     # Example usage
     assign_labels_to_documents(organization_name=org_name,
                                taxonomy_name=taxonomy_name,
                                labels_to_assign=labels_to_assign)
 
+def extract_and_assign_predictions(extraction_model: ExtractionModel,
+                                   document: Document,
+                                   extractor: DocumentExtractor,
+                                   **kwargs):
+
+    predictions = extractor.extract(document, extraction_model, **kwargs)
+    print("Predictions:", predictions)
+    if predictions:
+        success = add_predictions(db=db, model=extraction_model, document=document, predictions=predictions)
+        if success:
+            print(f"Predictions assigned to document '{document.name}' using model '{extraction_model.name}'.")
+
 if EXTRACTION:
     from test.functional_tests.org_definition import org_name, taxonomy_name, model_name
 
-    extraction_model = create_extraction_model(organization_name=org_name,
-                                               taxonomy_name=taxonomy_name,
-                                               model_name=model_name)
-    for doc in document_mapping:
-        document = get_document(db, doc["document_id"])  # Obtain the document using the document ID
-        if not document:
-            print(f"Document with ID '{doc['document_id']}' not found.")
-            continue
+    # Getting all documents from the organization
+    docs = get_documents(db, organization_id=org.id)
+    taxonomy = get_taxonomy_by_name(db, taxonomy_name)
+    extraction_model = create_extraction_model(db=db,
+                                               taxonomy_id=taxonomy.id,
+                                               model_name=model_name,
+                                               model_description=model_description)
+    ext = extractor()
+    for doc, extractions in zip(docs, extractions_to_assign):
 
         # You would need to provide actual organization name, taxonomy name, document, and extraction model
-        extract_and_assign_predictions(extraction_model, document, extractor, **doc['labels'])
+        extract_and_assign_predictions(extraction_model,
+                                       doc,
+                                       ext,
+                                       **extractions['labels'])
 
 if MODEL_EVALUATION:
     model = get_extraction_model_by_name(db, model_name)
@@ -95,11 +111,11 @@ if MODEL_EVALUATION:
             print(f"Document with ID '{doc['document_id']}' not found.")
             continue
 
-        predictions = doc.predictions
+        predictions = document.predictions
         for pred in [p for p in predictions if p.model_id == model_id]:
             print(pred.field_name, pred.value)
 
-        doc_results.append(compare_labels_and_predictions(db, doc.id, model_id))
+        doc_results.append(compare_labels_and_predictions(db, document.id, model_id))
 
     field_accuracy = get_accuracy_for_each_field(doc_results)
     overall_accuracy = sum([result.accuracy_rate() for result in doc_results]) / len(doc_results) * 100

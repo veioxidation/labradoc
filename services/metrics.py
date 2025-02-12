@@ -51,7 +51,7 @@ def update_metric(db: Session, metric_id: int, name: str = None, value: float = 
 
     db.commit()
     db.refresh(metric)
-    return metric[0]
+    return metric
 
 def create_or_update_metric(db: Session, name: str, value: float, sample_size: int, model_id: int) -> Metric:
     """

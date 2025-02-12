@@ -1,6 +1,7 @@
 org_name = "Demo Organization"
 taxonomy_name = "Document Classification"
 model_name = "Demo Extraction Model"
+model_description = "Model description dummy"
 org_description = "This is a demo organization for testing purposes."
 test_folder = "test/samples"
 

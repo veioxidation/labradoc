@@ -3,37 +3,27 @@ from models.DataModels import ExtractionModel
 from datetime import datetime, UTC
 from typing import List, Optional
 
-def create_extraction_model(
-    db: Session,
-    name: str,
-    taxonomy_id: int,
-    description: Optional[str] = None
-) -> ExtractionModel:
-    """
-    Create a new extraction model.
-    
-    Args:
-        db (Session): Database session
-        name (str): Name of the extraction model
-        taxonomy_id (int): ID of the taxonomy this model belongs to
-        description (Optional[str]): Description of the extraction model
-        
-    Returns:
-        ExtractionModel: Created extraction model object
-    """
-    model = ExtractionModel(
-        name=name,
-        description=description,
+
+def create_extraction_model(db: Session,
+                            taxonomy_id: int,
+                            model_name: str,
+                            model_description: str):
+    # Return a model object if one with the same name exists, otherwise create a new one
+    existing_model = db.query(ExtractionModel).filter(ExtractionModel.name == model_name).first()
+    if existing_model:
+        print(f"Extraction model with name '{model_name}' already exists.")
+        return existing_model
+
+    extraction_model = ExtractionModel(
+        name=model_name,
+        description=model_description,
         taxonomy_id=taxonomy_id,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
         is_active=True
     )
-    db.add(model)
+    db.add(extraction_model)
     db.commit()
-    db.refresh(model)
-    return model
-
+    print(f"New extraction model '{extraction_model.name}' created with ID: {extraction_model.id}")
+    return extraction_model
 def get_extraction_model(db: Session, model_id: int) -> Optional[ExtractionModel]:
     """
     Get an extraction model by ID.
