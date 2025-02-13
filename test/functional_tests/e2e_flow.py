@@ -2,7 +2,8 @@ from database import get_db
 # Import our services
 from functions.extractors import HardcodeValuesExtractor
 from functions.metrics import compare_labels_and_predictions, get_accuracy_for_each_field, \
-    get_percent_of_fully_correctly_extracted, get_overall_accuracy, PerformanceMetric
+    get_percent_of_fully_correctly_extracted, get_overall_accuracy
+from models.validation_models import PerformanceMetric
 from functions.post_processing import PostProcessor
 from models.DataModels import Document, Taxonomy
 from org_definition import taxonomy_name, org_name, org_description, test_folder, model_description, fields
@@ -125,7 +126,9 @@ if EXTRACTION:
         for metric in metrics:
             create_or_update_metric(db, metric.name, metric.value, len(doc_results), model_id)
 
-        print(doc_results)
-        print(f"Overall accuracy: {overall_accuracy}")
-        print(f"Percentage of fully correct documents: {perc_of_full_correct}")
-        print(f"Accuracy for each field: {field_accuracy}")
+        # print(doc_results)
+        print(f"{'='*20} METRICS {'='*20}")
+        print(f"Overall accuracy: {overall_accuracy:.2f} %" )
+        print(f"Percentage of fully correct documents: {perc_of_full_correct:.2f} %")
+        print(f"Accuracy for each field: {field_accuracy} %")
+        print(f"{'='*20} METRICS {'='*20}")
